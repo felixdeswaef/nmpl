@@ -22,32 +22,36 @@ float fdistS(float x1,float y1,float x2,float y2)
     return (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 }
 void CrossMatchKpSet(AlpOE * ingelezen,Keypoint keypoints[], int count) {
-    for (int i = 0;i<1;i++) //i<count -1
+    for (int i = 0;i<count -1;i++) //
     {
+        int l1 = 0;
+        int l2 = 0;
         int matchcnt = 0;
         //crosscheck for all
         Keypoint knp,nknp;
         Keypoint bestk,sbestk;
         Keypoint k = keypoints[i];
-        Keypoint nk = keypoints[i+1];
+
         float best = FLOATMAX;
         float sbest = FLOATMAX;
         float th = 0.7;
         float ths = th * th;
         int ncc = 0;
         do{
+            Keypoint nk = keypoints[i+1];
+            l1++;
             knp = (k->next);
             best = FLOATMAX;
             sbest = FLOATMAX;
             do{
-
+                l2++;
                 nknp = (nk->next);
                 //doesnt work
                 if (strncmp(k->descrip,nk->descrip,KPDESCLEN))
                 {
 
                     float  dist = fdistS(k->row,k->col,nk->row,nk->col);
-                    if(matchcnt<2)printf("matched %f dist %f	",dist,best);
+                    //if(matchcnt<2)printf("matched %f dist %f in %d %d	",dist,best,l1,l2);
 
                     if (dist<best)
                     {
@@ -68,7 +72,7 @@ void CrossMatchKpSet(AlpOE * ingelezen,Keypoint keypoints[], int count) {
             }while(nknp != NULL);
             //threshhold
             //printf("match dist %f %f ncc%d		",best,sbest,ncc);
-            if(best/sbest<= ths )
+            if(best/sbest < ths )
             {
                 matchcnt++;
             }
@@ -122,7 +126,7 @@ Rect ClampRect(Rect r,int max_X ,int max_Y)
     return r;
 
 }
-void FilterKpBbSet(AlpOE * ingelezen,Keypoint * keypoints, int count){
+void FilterKpBbSet(AlpOE * ingelezen,Keypoint  keypoints[], int count){
     for (int i = 0;i<count;i++)
     {
         Image im = ReadPGMFile(ingelezen[i].Bestn);
@@ -160,19 +164,20 @@ void DrawKp(Keypoint KPP,Image im){
 }
 int DrawKpS(Keypoint KPP,Image im)
 {
+    Keypoint wk = KPP;
     int cnt = 0;
     Keypoint * np;
     do{
-        np = (KPP->next);
-            DrawKp(KPP,im);
+        np = (wk->next);
+            DrawKp(wk,im);
             cnt++;
-        KPP = np; ///YOU DUMB FUCK
+        wk = np; //FIXED Broke array by rewriting kpp
     }while(np != NULL);
     return cnt;
 }
 Keypoint FilterKpBb(Rect r ,Keypoint KPP)
 {
-    //TODO rewrite with first value as a return value. making shure not to rewrite since it seems to break the array higher up
+    //DONE rewrite with first value as a return value. making shure not to rewrite since it seems to break the array higher up
     //KPP is first pointer &KPP is its adress
     // so switching out the first means writing to &KPP instead of next
     Keypoint first = KPP;//contains first pointer if it doesnt get dumped it will be returned
